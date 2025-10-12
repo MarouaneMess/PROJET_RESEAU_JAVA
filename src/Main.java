@@ -31,6 +31,10 @@ public class Main {
                         try {
                             String nom = inputGen[0];
                             int capacite = Integer.parseInt(inputGen[1]);
+                            if (capacite <= 0) {
+                                System.out.println("Erreur: La capacité doit être un entier positif.");
+                                break;
+                            }
                             reseau.ajouterGenerateur(nom, capacite);
                         } catch (NumberFormatException e) {
                             System.out.println("Erreur: Capacité invalide.");

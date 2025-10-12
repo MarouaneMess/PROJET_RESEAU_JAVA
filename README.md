@@ -64,70 +64,16 @@ Ces formules sont implémentées dans `ReseauElectrique` via `calculerDispersion
 - `HashMap` offre des opérations `get/put/containsKey` en O(1) moyen, suffisant ici car l’ordre d’itération n’est pas requis.
 - On peut remplacer plus tard par `LinkedHashMap` (ordre d’insertion) ou `TreeMap` (clés triées) sans changer les signatures publiques.
 
-## Construire le projet (sans outil de build)
-
-Le projet ne contient pas de classe `main` par défaut. Vous pouvez compiler les classes du modèle ainsi:
-
-```powershell
-# Depuis la racine du projet
-New-Item -ItemType Directory -Force bin | Out-Null
-javac -d bin src/Model/*.java
-```
-
-Pour exécuter un exemple, créez une classe `Main.java` (voir ci-dessous), compilez-la et lancez-la avec le classpath pointant vers `bin`.
-
-## Exemple minimal d’utilisation
-
-Créez un fichier `src/Main.java` (sans package) avec le contenu suivant:
-
-```java
-public class Main {
-		public static void main(String[] args) {
-				ReseauElectrique reseau = new ReseauElectrique(10); // λ = 10
-
-				reseau.ajouterGenerateur("G1", 60);
-				reseau.ajouterGenerateur("G2", 50);
-
-				reseau.ajouterMaison("M1", "BASSE");
-				reseau.ajouterMaison("M2", "NORMAL");
-				reseau.ajouterMaison("M3", "FORTE");
-
-				reseau.ajouterConnexion("M1", "G1");
-				reseau.ajouterConnexion("G2", "M2"); // ordre inversé accepté
-				reseau.ajouterConnexion("M3", "G1");
-
-				reseau.afficherReseau();
-				reseau.verifierReseau();
-				reseau.calculerCout();
-
-				// Pour déplacer M3 de G1 vers G2, utiliser modifierConnexion:
-				reseau.modifierConnexion("M3", "G1", "M3", "G2");
-				reseau.afficherReseau();
-				reseau.calculerCout();
-		}
-}
-```
-
-Compiler et exécuter sous Windows PowerShell:
 
 ```powershell
 # Compilation des sources du modèle + Main
-New-Item -ItemType Directory -Force bin | Out-Null
 javac -d bin src/Model/*.java src/Main.java
 
 # Exécution
 java -cp bin Main
 ```
 
-## Bonnes pratiques et garde-fous
-
-- Évitez `capaciteMax = 0` pour un générateur (division par zéro dans le taux d’utilisation).
-- Pour changer le générateur d’une maison, préférez `modifierConnexion` (qui retire l’ancienne connexion) plutôt que de ré-appeler `ajouterConnexion` directement, afin d’éviter de laisser la maison listée chez l’ancien générateur.
-- Assurez-vous que les `hashCode/equals` ne sont pas surchargés sur `Maison` et `Generateur` si vous les utilisez comme clés dans des collections basées sur l’égalité (ici, les clés des maps sont des `String`, donc OK).
-
 ## Idées d’amélioration
 
-- Valider les entrées (capacités > 0, noms uniques non vides).
+- Valider les entrées ( noms uniques non vides).
 - Empêcher une maison d’être rattachée à plusieurs générateurs simultanément côté structure (en forçant le retrait automatique de l’ancien lien lors d’une nouvelle connexion).
-- Ajout d’une classe `Main` officielle et de tests unitaires.
-- Passer à Maven/Gradle pour faciliter build et tests.
