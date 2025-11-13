@@ -44,7 +44,7 @@ public class Main {
                     }
                     break;
                 case "2":
-                    System.out.print("Nom et type de maison (ex: M1 NORMAL): ");
+                    System.out.print("Nom et type de maison (ex: M1 (NORMAL/ BASSE/ FORTE)): ");
                     String[] inputMaison = scanner.nextLine().split("\\s+");
                     if (inputMaison.length == 2) {
                         reseau.ajouterMaison(inputMaison[0], inputMaison[1]);
@@ -53,6 +53,7 @@ public class Main {
                     }
                     break;
                 case "3":
+                    reseau.afficherReseau();
                     System.out.print("Connexion (ex: M1 G1): ");
                     String[] inputCon = scanner.nextLine().split("\\s+");
                     if (inputCon.length == 2) {
@@ -62,10 +63,21 @@ public class Main {
                     }
                     break;
                 case "4":
-                    if (reseau.verifierReseau()) {
-                        return;
+                    reseau.afficherReseau();
+                    System.out.print("Supprimer connexion (ex: M1 G1): ");
+                    String[] inputSup = scanner.nextLine().split("\\s+");
+                    if (inputSup.length == 2) {
+                        reseau.supprimerConnexion(inputSup[0], inputSup[1]);
+                    } else {
+                        System.out.println("Erreur: Format invalide.");
                     }
                     break;
+                case "5":
+                    if (reseau.verifierReseau()) {
+                        return; // passer à la phase d'opération
+                    }
+                    break;
+                
                 default:
                     System.out.println("Choix invalide.");
             }
@@ -110,7 +122,8 @@ public class Main {
         System.out.println("1. Ajouter un générateur");
         System.out.println("2. Ajouter une maison");
         System.out.println("3. Ajouter une connexion");
-        System.out.println("4. Fin");
+        System.out.println("4. Supprimer une connexion");
+        System.out.println("5. Fin");
         System.out.print("Votre choix: ");
     }
 

@@ -33,6 +33,9 @@ public class Generateur {
     }
 
     public double calculerTauxUtilisation() {
+        if (capaciteMax == 0) {
+            return 0.0;
+        }
         return (double) getChargeActuelle() / capaciteMax;
     }
 

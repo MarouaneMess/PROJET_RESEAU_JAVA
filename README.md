@@ -28,6 +28,17 @@ Modélisation simple d’un réseau électrique en Java avec des maisons, des g�
 - `void ajouterConnexion(String nom1, String nom2)`
 	- Accepte l’ordre indifféremment (Maison, Générateur) ou (Générateur, Maison).
 	- Remarque: cette méthode crée le lien bidirectionnel en ajoutant la maison au générateur (et met à jour la maison). Pour déplacer une maison d’un générateur A vers B, utilisez plutôt `modifierConnexion` (voir ci-dessous) afin de nettoyer l’ancienne connexion.
+ - `void ajouterConnexion(String nom1, String nom2)`
+	- Accepte l’ordre indifféremment (Maison, Générateur) ou (Générateur, Maison).
+	- Remarque: cette méthode crée le lien bidirectionnel en ajoutant la maison au générateur (et met à jour la maison). Pour déplacer une maison d’un générateur A vers B, utilisez plutôt `modifierConnexion` (voir ci-dessous) afin de nettoyer l’ancienne connexion.
+
+- `void supprimerConnexion(String nom1, String nom2)`
+	- Supprime une connexion existante entre une maison et un générateur.
+	- Accepte l'ordre indifféremment (`M1 G1` ou `G1 M1`) et est insensible à la casse (les clés sont normalisées en majuscules en interne).
+	- Vérifie que la maison et le générateur existent; imprime un message d'erreur si l'un des deux est absent.
+	- Vérifie que la connexion existe réellement avant suppression; imprime une erreur si aucune connexion n'est trouvée.
+	- Retire la maison de la liste `maisonsConnectees` du générateur et met à jour le lien côté `Maison`.
+	- Exemple d'utilisation dans `Main.java`: `reseau.supprimerConnexion("M1", "G1");`
 - `void modifierConnexion(String nomMaisonOld, String nomGenOld, String nomMaisonNew, String nomGenNew)`
 	- Vérifie que la connexion (maison, ancien générateur) existe, la retire puis crée la nouvelle connexion.
 - `boolean verifierReseau()`

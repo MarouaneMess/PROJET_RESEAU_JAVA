@@ -20,13 +20,14 @@ public class ReseauElectrique {
     }
 
     public void ajouterGenerateur(String nom, int capaciteMax) {
-        if (generateurs.containsKey(nom)) {
+        String key = nom.toUpperCase();
+        if (generateurs.containsKey(key)) {
             // Mise à jour de la capacité d'un générateur existant
             System.out.println("Mise à jour: Le générateur " + nom + " existe déjà. Capacité mise à jour.");
-            generateurs.get(nom).setCapaciteMax(capaciteMax);
+            generateurs.get(key).setCapaciteMax(capaciteMax);
         } else {
-            // Création d'un nouveau générateur
-            generateurs.put(nom, new Generateur(nom, capaciteMax));
+            // Création d'un nouveau générateur (on conserve le nom original dans l'objet)
+            generateurs.put(key, new Generateur(nom, capaciteMax));
             System.out.println("Générateur " + nom + " ajouté avec succès.");
         }
     }
@@ -35,15 +36,15 @@ public class ReseauElectrique {
         try {
             // conbersion du string en enum
             TypeConsommation type = TypeConsommation.valueOf(typeConsommationStr.toUpperCase());
-            
-            if (maisons.containsKey(nom)) {
+            String key = nom.toUpperCase();
+            if (maisons.containsKey(key)) {
                 System.out.println("Mise à jour: La maison " + nom + " existe déjà. Consommation mise à jour.");
             } else {
                 System.out.println("Maison " + nom + " ajoutée avec succès.");
             }
-            
+
             // put() écrase l'ancienne valeur si la clé existe
-            maisons.put(nom, new Maison(nom, type));
+            maisons.put(key, new Maison(nom, type));
             
         } catch (IllegalArgumentException e) {
             // si le type de consommation est invalide
@@ -59,26 +60,74 @@ public class ReseauElectrique {
      * Crée une connexion entre une maison et un générateur.
      * Gère automatiquement l'ordre des paramètres (M1 G1 ou G1 M1).
      */
+    
+
     public void ajouterConnexion(String nom1, String nom2) {
         Maison maison = null;
         Generateur generateur = null;
-        
+
+        String k1 = nom1.toUpperCase();
+        String k2 = nom2.toUpperCase();
+
         // on travaille sur les deux cas (G M ou M G)
-        if (maisons.containsKey(nom1) && generateurs.containsKey(nom2)) {
-            maison = maisons.get(nom1);
-            generateur = generateurs.get(nom2);
-        } else if (maisons.containsKey(nom2) && generateurs.containsKey(nom1)) {
-            maison = maisons.get(nom2);
-            generateur = generateurs.get(nom1);
+        if (maisons.containsKey(k1) && generateurs.containsKey(k2)) {
+            maison = maisons.get(k1);
+            generateur = generateurs.get(k2);
+        } else if (maisons.containsKey(k2) && generateurs.containsKey(k1)) {
+            maison = maisons.get(k2);
+            generateur = generateurs.get(k1);
         } else {
             System.out.println("Erreur: La maison ou le générateur n'existe pas.");
             return;
         }
+
+        // Si la maison est déjà connectée à un autre générateur, on refuse la reconnexion automatique
+        if (maison.getGenerateur() != null) {
+            if (maison.getGenerateur() == generateur) {
+                System.out.println("Info: La maison " + maison.getNom() + " est déjà connectée au générateur " + generateur.getNom() + ".");
+                return;
+            } else {
+                System.out.println("Erreur: La maison " + maison.getNom() + " est déjà connectée à un autre générateur (" + maison.getGenerateur().getNom() + "). Supprimez d'abord la connexion existante.");
+                return;
+            }
+        }
+
         // Création de la nouvelle connexion bidirectionnelle
-        //maison.setGenerateur(generateur);  Maison → Générateur (on peut l'enlever car fait dans generateur.ajouterMaison)
         generateur.ajouterMaison(maison);          // Générateur → Maison
-        
+
         System.out.println("Connexion créée entre " + maison.getNom() + " et " + generateur.getNom() + ".");
+    }
+
+    /**
+     * Supprime une connexion existante entre une maison et un générateur.
+     * Accepte l'ordre des paramètres indifféremment (M1 G1 ou G1 M1).
+     */
+    public void supprimerConnexion(String nom1, String nom2) {
+        Maison maison = null;
+        Generateur generateur = null;
+
+        String k1 = nom1.toUpperCase();
+        String k2 = nom2.toUpperCase();
+
+        if (maisons.containsKey(k1) && generateurs.containsKey(k2)) {
+            maison = maisons.get(k1);
+            generateur = generateurs.get(k2);
+        } else if (maisons.containsKey(k2) && generateurs.containsKey(k1)) {
+            maison = maisons.get(k2);
+            generateur = generateurs.get(k1);
+        } else {
+            System.out.println("Erreur: La maison ou le générateur n'existe pas.");
+            return;
+        }
+
+        // Vérifier que la connexion existe réellement
+        if (!generateur.getMaisonsConnectees().contains(maison)) {
+            System.out.println("Erreur: La connexion entre " + maison.getNom() + " et " + generateur.getNom() + " n'existe pas.");
+            return;
+        }
+
+        generateur.retirerMaison(maison);
+        System.out.println("Connexion supprimée entre " + maison.getNom() + " et " + generateur.getNom() + ".");
     }
 
     /**
@@ -87,22 +136,27 @@ public class ReseauElectrique {
      */
     public void modifierConnexion(String nomMaisonOld, String nomGenOld, 
                                    String nomMaisonNew, String nomGenNew) {
+        // Normaliser clés
+        String oldM = nomMaisonOld.toUpperCase();
+        String oldG = nomGenOld.toUpperCase();
+        String newM = nomMaisonNew.toUpperCase();
+        String newG = nomGenNew.toUpperCase();
+
         // Vérification de l'existence des éléments de l'ancienne connexion
-        if (maisons.containsKey(nomMaisonOld) && generateurs.containsKey(nomGenOld)) {
-            Maison maison = maisons.get(nomMaisonOld);
-            Generateur generateurOld = generateurs.get(nomGenOld);
+        if (maisons.containsKey(oldM) && generateurs.containsKey(oldG)) {
+            Maison maison = maisons.get(oldM);
+            Generateur generateurOld = generateurs.get(oldG);
 
             // Vérification que la connexion existe réellement
-            // Comparaison par référence (!=) car même instance (sans equals)
             if (maison.getGenerateur() != generateurOld) {
                 System.out.println("Erreur: La connexion " + nomMaisonOld + "-" + nomGenOld + " n'existe pas.");
                 return;
             }
 
-            // Création de la nouvelle connexion via ajouterConnexion()
-            generateurOld.retirerMaison(maison); // Retrait de l'ancienne connexion
+            // Retrait de l'ancienne connexion
+            generateurOld.retirerMaison(maison);
             // vérifier que le nouveau générateur existe et que le nom de la maison n'a pas changé
-            if (generateurs.containsKey(nomGenNew) && nomMaisonNew.equals(nomMaisonOld)) {
+            if (generateurs.containsKey(newG) && newM.equals(oldM)) {
                 ajouterConnexion(nomMaisonNew, nomGenNew);
             } else {
                 System.out.println("Erreur: Le générateur " + nomGenNew + " n'existe pas ou le nom de la maison a changé.");
@@ -114,21 +168,29 @@ public class ReseauElectrique {
 
     public boolean verifierReseau() {
         StringBuilder problemes = new StringBuilder();
-        //maisons.values() car on a juste besoin des maisons 
+
         for (Maison maison : maisons.values()) {
-            if (maison.getGenerateur() == null) {
-                if (problemes.length() > 0) {
-                    problemes.append(", ");
+            int compte = 0;
+            for (Generateur gen : generateurs.values()) {
+                if (gen.getMaisonsConnectees().contains(maison)) {
+                    compte++;
                 }
-                problemes.append(maison.getNom());
+            }
+
+            if (compte == 0) {
+                if (problemes.length() > 0) problemes.append(", ");
+                problemes.append(maison.getNom() + " (pas de connexion)");
+            } else if (compte > 1) {
+                if (problemes.length() > 0) problemes.append(", ");
+                problemes.append(maison.getNom() + " (" + compte + " connexions)");
             }
         }
-        
+
         if (problemes.length() > 0) {
-            System.out.println("Problème: Les maisons suivantes ne sont pas connectées: " + problemes.toString());
+            System.out.println("Problème: Les maisons suivantes posent problème: " + problemes.toString());
             return false;
         } else {
-            System.out.println("Réseau valide: Toutes les maisons sont connectées.");
+            System.out.println("Réseau valide: Chaque maison est connectée à un unique générateur.");
             return true;
         }
     }
