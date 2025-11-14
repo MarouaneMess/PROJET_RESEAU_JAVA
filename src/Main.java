@@ -6,7 +6,6 @@ public class Main {
 
     public static void main(String[] args) {
         ReseauElectrique reseau = new ReseauElectrique(10);
-
         // Phase de construction
         System.out.println("=== PHASE DE CONSTRUCTION ===");
         phaseConstruction(reseau);

@@ -4,6 +4,10 @@ import java.util.List;
 public class Generateur {
     private String nom;
     private int capaciteMax;
+    /*  on a pas utiliser un set car on gere ca dans le reseau electrique 
+     quand on cree une connexion on verifie si la maison 
+     est deja connectee a un generateur ou non (meme si le meme)'
+    */
     private List<Maison> maisonsConnectees;
 
     public Generateur(String nom, int capaciteMax) {

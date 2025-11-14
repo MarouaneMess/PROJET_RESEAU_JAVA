@@ -20,15 +20,15 @@ public class ReseauElectrique {
     }
 
     public void ajouterGenerateur(String nom, int capaciteMax) {
-        String key = nom.toUpperCase();
-        if (generateurs.containsKey(key)) {
+        String nomUpper = nom.toUpperCase();
+        if (generateurs.containsKey(nomUpper)) {
             // Mise à jour de la capacité d'un générateur existant
-            System.out.println("Mise à jour: Le générateur " + nom + " existe déjà. Capacité mise à jour.");
-            generateurs.get(key).setCapaciteMax(capaciteMax);
+            System.out.println("Mise à jour: Le générateur " + nomUpper + " existe déjà. Capacité mise à jour.");
+            generateurs.get(nomUpper).setCapaciteMax(capaciteMax);
         } else {
-            // Création d'un nouveau générateur (on conserve le nom original dans l'objet)
-            generateurs.put(key, new Generateur(nom, capaciteMax));
-            System.out.println("Générateur " + nom + " ajouté avec succès.");
+            // Création d'un nouveau générateur (nom stocké en majuscules)
+            generateurs.put(nomUpper, new Generateur(nomUpper, capaciteMax));
+            System.out.println("Générateur " + nomUpper + " ajouté avec succès.");
         }
     }
 
@@ -36,15 +36,15 @@ public class ReseauElectrique {
         try {
             // conbersion du string en enum
             TypeConsommation type = TypeConsommation.valueOf(typeConsommationStr.toUpperCase());
-            String key = nom.toUpperCase();
-            if (maisons.containsKey(key)) {
-                System.out.println("Mise à jour: La maison " + nom + " existe déjà. Consommation mise à jour.");
+            String nomUpper = nom.toUpperCase();
+            if (maisons.containsKey(nomUpper)) {
+                System.out.println("Mise à jour: La maison " + nomUpper + " existe déjà. Consommation mise à jour.");
             } else {
-                System.out.println("Maison " + nom + " ajoutée avec succès.");
+                System.out.println("Maison " + nomUpper + " ajoutée avec succès.");
             }
 
             // put() écrase l'ancienne valeur si la clé existe
-            maisons.put(key, new Maison(nom, type));
+            maisons.put(nomUpper, new Maison(nomUpper, type));
             
         } catch (IllegalArgumentException e) {
             // si le type de consommation est invalide
@@ -69,7 +69,7 @@ public class ReseauElectrique {
         String k1 = nom1.toUpperCase();
         String k2 = nom2.toUpperCase();
 
-        // on travaille sur les deux cas (G M ou M G)
+        // les deux cas (G M ou M G)
         if (maisons.containsKey(k1) && generateurs.containsKey(k2)) {
             maison = maisons.get(k1);
             generateur = generateurs.get(k2);
