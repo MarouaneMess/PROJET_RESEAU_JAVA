@@ -73,7 +73,7 @@ public class Main {
                     break;
                 case "5":
                     if (reseau.verifierReseau()) {
-                        return; // passer à la phase d'opération
+                        return; 
                     }
                     break;
                 
