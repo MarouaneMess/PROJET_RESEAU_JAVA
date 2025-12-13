@@ -1,6 +1,8 @@
+package Model;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.Map;
 public class ReseauElectrique {
@@ -19,6 +21,13 @@ public class ReseauElectrique {
     public ReseauElectrique() {
         // constructeur par défaut avec pénalité 10, on fait appel au constructeur principal    
         this(10); 
+    }
+
+    public Collection<Maison> getMaisons() {
+        return maisons.values();
+    }
+    public Collection<Generateur> getGenerateurs() {
+        return generateurs.values();
     }
 
     /**
@@ -368,10 +377,20 @@ public class ReseauElectrique {
         System.out.println("\n=== Calcul du coût ===");
         System.out.println ("Dispersion (Disp(S)): " + dispersion); 
         System.out.println("Surcharge (Surcharge(S)): " + surcharge); 
-        System.out.println("Coût total (λ=" + penalite + "): " + cout);
+        System.out.println("Coût total (lambda=" + penalite + "): " + cout);
         System.out.println("======================\n");
         
         return cout;
+    }
+
+    /**
+     * Version du calcul du coût (sans affichage),
+     * utilisée par l'algorithme d'optimisation.
+     */
+    public double calculerCoutSilencieux() {
+        double dispersion = calculerDispersion();
+        double surcharge = calculerSurcharge();
+        return dispersion + penalite * surcharge;
     }
 
     // ============================================================================

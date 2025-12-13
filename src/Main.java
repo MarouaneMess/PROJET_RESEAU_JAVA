@@ -1,3 +1,5 @@
+import Model.*;
+import Algo.*;
 import java.util.Scanner;
 
 public class Main {
@@ -5,14 +7,45 @@ public class Main {
     private static Scanner scanner = new Scanner(System.in);
 
     public static void main(String[] args) {
-        ReseauElectrique reseau = new ReseauElectrique(10);
-        // Phase de construction
-        System.out.println("=== PHASE DE CONSTRUCTION ===");
-        phaseConstruction(reseau);
+        // Mode automatique avec fichier et pénalité en arguments
+        if (args.length >= 2) {
+            String cheminFichier = args[0];
+            int penalite;
+            try {
+                penalite = Integer.parseInt(args[1]);
+                if (penalite <= 0) {
+                    System.out.println("Erreur: La pénalité doit être un entier positif.");
+                    return;
+                }
+            } catch (NumberFormatException e) {
+                System.out.println("Erreur: La pénalité doit être un entier valide.");
+                return;
+            }
 
-        // Phase d'opération
-        System.out.println("\n=== PHASE D'OPÉRATION ===");
-        phaseOperation(reseau);
+            ReseauElectrique reseau = new ReseauElectrique(penalite);
+            if (!reseau.chargerDepuisFichier(cheminFichier)) {
+                System.out.println("Échec du chargement. Programme arrêté.");
+                return;
+            }
+
+            if (!reseau.verifierReseau()) {
+                System.out.println("Le réseau chargé n'est pas valide. Programme arrêté.");
+                return;
+            }
+
+            // reseau.afficherReseau();
+            System.out.println("\n=== MODE AUTOMATIQUE ===");
+            menuAutomatique(reseau);
+        }
+        // Mode manuel (partie 1)
+        else {
+            ReseauElectrique reseau = new ReseauElectrique(10);
+            System.out.println("=== PHASE DE CONSTRUCTION ===");
+            phaseConstruction(reseau);
+
+            System.out.println("\n=== PHASE D'OPÉRATION ===");
+            phaseOperation(reseau);
+        }
 
         scanner.close();
     }
@@ -140,6 +173,60 @@ public class Main {
         System.out.println("2. Modifier une connexion");
         System.out.println("3. Afficher le réseau");
         System.out.println("4. Fin");
+        System.out.print("Votre choix: ");
+    }
+
+    private static void menuAutomatique(ReseauElectrique reseau) {
+        while (true) {
+            afficherMenuAutomatique();
+            String choix = scanner.nextLine().trim();
+
+            switch (choix) {
+                case "1":
+                    System.out.print("Nombre de tentatives d'optimisation (k): ");
+                    try {
+                        int k = Integer.parseInt(scanner.nextLine().trim());
+                        if (k <= 0) {
+                            System.out.println("Erreur: k doit être positif.");
+                            break;
+                        }
+                        System.out.println("\n--- Résolution automatique en cours... ---");
+                        double coutInitial = reseau.calculerCoutSilencieux();
+                        Optimiseur.optimiserReseau(reseau, k);
+                        double coutFinal = reseau.calculerCoutSilencieux();
+                        double amelioration = coutInitial - coutFinal;
+                        System.out.println("\n=== RÉSULTAT ===");
+                        System.out.println("Coût initial: " + String.format("%.9f", coutInitial));
+                        System.out.println("Coût final: " + String.format("%.9f", coutFinal));
+                        System.out.println("Amélioration: " + amelioration + " (" + String.format("%.2f", amelioration/coutInitial*100) + "%)");
+                        //reseau.afficherReseau();
+                    } catch (NumberFormatException e) {
+                        System.out.println("Erreur: k doit être un entier valide.");
+                    }
+                    break;
+                case "2":
+                    System.out.print("Nom du fichier de sauvegarde: ");
+                    String nomFichier = scanner.nextLine().trim();
+                    if (Sauvegarde.sauvegarderSolution(reseau, nomFichier)) {
+                        System.out.println("Solution sauvegardée avec succès dans " + nomFichier);
+                    } else {
+                        System.out.println("Erreur lors de la sauvegarde.");
+                    }
+                    break;
+                case "3":
+                    System.out.println("Programme terminé.");
+                    return;
+                default:
+                    System.out.println("Choix invalide.");
+            }
+        }
+    }
+
+    private static void afficherMenuAutomatique() {
+        System.out.println("\n--- MENU AUTOMATIQUE ---");
+        System.out.println("1. Résolution automatique");
+        System.out.println("2. Sauvegarder la solution actuelle");
+        System.out.println("3. Fin");
         System.out.print("Votre choix: ");
     }
 }

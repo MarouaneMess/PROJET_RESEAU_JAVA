@@ -1,5 +1,7 @@
+package Model;
 import java.util.ArrayList;
 import java.util.List;
+
 
 public class Generateur {
     private String nom;
