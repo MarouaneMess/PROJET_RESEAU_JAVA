@@ -1,22 +1,139 @@
-import java.util.HashMap;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.LinkedHashMap;
 import java.util.Map;
-
 public class ReseauElectrique {
 
     //   Map des maisons du réseau, indexées par leur nom.
-    //   Choix HashMap : Permet un accès en O(1) par nom de maison par contre O(n) pour une liste"pour les opeations rech, ...etc."
+    //   LinkedHashMap pour préserver l'ordre d'insertion (aligné sur le fichier chargé).
     private Map<String, Maison> maisons;
     private Map<String, Generateur> generateurs; // pareil pour les générateurs
     private int penalite; // val par défaut = 10
  
     public ReseauElectrique(int penalite) {
-        this.maisons = new HashMap<>();// HashMap garantit des performances O(1) pour get/put/containsKey
-        this.generateurs = new HashMap<>();
+        this.maisons = new LinkedHashMap<>();
+        this.generateurs = new LinkedHashMap<>();
         this.penalite = penalite;
     }
     public ReseauElectrique() {
         // constructeur par défaut avec pénalité 10, on fait appel au constructeur principal    
         this(10); 
+    }
+
+    /**
+     * Recharge complètement le réseau à partir d'un fichier texte.
+     */
+    public boolean chargerDepuisFichier(String cheminFichier) {
+        Map<String, Generateur> nouveauxGenerateurs = new LinkedHashMap<>();
+        Map<String, Maison> nouvellesMaisons = new LinkedHashMap<>();
+        int phase = 0; // 0: generateurs, 1: maisons, 2: connexions
+
+        try {
+            int ligneNo = 0;
+            for (String rawLine : Files.readAllLines(Path.of(cheminFichier))) {
+                ligneNo++;
+                String line = rawLine.trim();
+                if (line.isEmpty()) continue;
+
+                // Retirer le point final
+                if (line.endsWith(".")) {
+                    line = line.substring(0, line.length() - 1).trim();
+                }
+
+                // Générateurs: generateur(nom,capacite)
+                if (line.toLowerCase().startsWith("generateur(") && line.endsWith(")")) {
+                    if (phase > 0) {
+                        System.out.println("Erreur ligne " + ligneNo + " : générateurs avant maisons/connexions.");
+                        return false;
+                    }
+                    String contenu = line.substring(11, line.length() - 1); // enlever "generateur(" et ")"
+                    String[] parts = contenu.split(",");
+                    if (parts.length != 2) {
+                        System.out.println("Erreur ligne " + ligneNo + " : format générateur invalide.");
+                        return false;
+                    }
+                    String nom = parts[0].trim().toUpperCase();
+                    int capacite = Integer.parseInt(parts[1].trim());
+                    if (nouveauxGenerateurs.containsKey(nom)) {
+                        System.out.println("Erreur ligne " + ligneNo + " : générateur en double.");
+                        return false;
+                    }
+                    nouveauxGenerateurs.put(nom, new Generateur(nom, capacite));
+                }
+                // Maisons: maison(nom,TYPE)
+                else if (line.toLowerCase().startsWith("maison(") && line.endsWith(")")) {
+                    if (nouveauxGenerateurs.isEmpty()) {
+                        System.out.println("Erreur ligne " + ligneNo + " : définir générateurs d'abord.");
+                        return false;
+                    }
+                    if (phase == 0) phase = 1;
+                    else if (phase > 1) {
+                        System.out.println("Erreur ligne " + ligneNo + " : maisons avant connexions.");
+                        return false;
+                    }
+                    String contenu = line.substring(7, line.length() - 1); // enlever "maison(" et ")"
+                    String[] parts = contenu.split(",");
+                    if (parts.length != 2) {
+                        System.out.println("Erreur ligne " + ligneNo + " : format maison invalide.");
+                        return false;
+                    }
+                    String nom = parts[0].trim().toUpperCase();
+                    String type = parts[1].trim().toUpperCase();
+                    if (nouvellesMaisons.containsKey(nom)) {
+                        System.out.println("Erreur ligne " + ligneNo + " : maison en double.");
+                        return false;
+                    }
+                    nouvellesMaisons.put(nom, new Maison(nom, TypeConsommation.valueOf(type)));
+                }
+                // Connexions: connexion(a,b)
+                else if (line.toLowerCase().startsWith("connexion(") && line.endsWith(")")) {
+                    if (nouvellesMaisons.isEmpty()) {
+                        System.out.println("Erreur ligne " + ligneNo + " : définir maisons d'abord.");
+                        return false;
+                    }
+                    phase = 2;
+                    String contenu = line.substring(10, line.length() - 1); // enlever "connexion(" et ")"
+                    String[] parts = contenu.split(",");
+                    if (parts.length != 2) {
+                        System.out.println("Erreur ligne " + ligneNo + " : format connexion invalide.");
+                        return false;
+                    }
+                    String n1 = parts[0].trim().toUpperCase();
+                    String n2 = parts[1].trim().toUpperCase();
+
+                    Generateur gen = nouveauxGenerateurs.get(n1);
+                    Maison maison = nouvellesMaisons.get(n2);
+                    if (gen == null || maison == null) {
+                        gen = nouveauxGenerateurs.get(n2);
+                        maison = nouvellesMaisons.get(n1);
+                    }
+                    if (gen == null || maison == null) {
+                        System.out.println("Erreur ligne " + ligneNo + " : élément inconnu.");
+                        return false;
+                    }
+                    if (maison.getGenerateur() != null) {
+                        System.out.println("Erreur ligne " + ligneNo + " : maison déjà connectée.");
+                        return false;
+                    }
+                    gen.ajouterMaison(maison);
+                } else {
+                    System.out.println("Erreur ligne " + ligneNo + " : format inconnu.");
+                    return false;
+                }
+            }
+        } catch (IOException e) {
+            System.out.println("Erreur: fichier illisible (" + e.getMessage() + ").");
+            return false;
+        } catch (Exception e) {
+            System.out.println("Erreur de parsing: " + e.getMessage());
+            return false;
+        }
+
+        this.generateurs = nouveauxGenerateurs;
+        this.maisons = nouvellesMaisons;
+        System.out.println("Réseau chargé: " + generateurs.size() + " générateur(s), " + maisons.size() + " maison(s).");
+        return true;
     }
 
     public void ajouterGenerateur(String nom, int capaciteMax) {

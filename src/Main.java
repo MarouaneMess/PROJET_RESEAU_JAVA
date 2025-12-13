@@ -23,6 +23,13 @@ public class Main {
             String choix = scanner.nextLine().trim();
 
             switch (choix) {
+                case "0":
+                    System.out.print("Chemin du fichier réseau: ");
+                    String chemin = scanner.nextLine().trim();
+                    if (reseau.chargerDepuisFichier(chemin)) {
+                        reseau.afficherReseau();
+                    }
+                    break;
                 case "1":
                     System.out.print("Nom et capacité du générateur (ex: G1 60): ");
                     String[] inputGen = scanner.nextLine().split("\\s+");
@@ -118,6 +125,7 @@ public class Main {
 
     private static void afficherMenuConstruction() {
         System.out.println("\n--- MENU CONSTRUCTION ---");
+        System.out.println("0. Charger un réseau depuis un fichier");
         System.out.println("1. Ajouter un générateur");
         System.out.println("2. Ajouter une maison");
         System.out.println("3. Ajouter une connexion");
