@@ -172,7 +172,7 @@ java -cp ./bin Main instance/instance1.txt 10
 **Dans le menu automatique** :
 ```
 1. Résolution automatique
-   → Saisir k (ex: 100)
+   → Saisir k (ex: 1000)
 2. Sauvegarder la solution actuelle
    → Saisir nom de fichier (ex: solution.txt)
 3. Fin
