@@ -1,6 +1,6 @@
-# Réseau Électrique – Projet Java
+# Projet Réseau Électrique - Optimisation
 
-Modélisation simple d’un réseau électrique en Java avec des maisons, des générateurs et des métriques de coût pour évaluer une configuration.
+Projet Java pour la gestion et l'optimisation d'un réseau électrique composé de générateurs et de maisons.
 
 ## Aperçu du modèle
 

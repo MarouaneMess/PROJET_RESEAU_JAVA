@@ -7,8 +7,15 @@ import java.util.Random;
 
 public class Optimiseur {
 
+    // Paramètres du recuit simulé 
+    private static final double TEMP_INIT_FACTOR = 0.50;    // T0 = coût * 0.50
+    private static final double COOLING_FACTOR   = 0.95;    // T <- T * 0.95
+
+    // Paramètre de perturbation entre redémarrages (fraction de maisons perturbées)
+    private static final double PERTURBATION_FRACTION = 1.0 / 3.0; // ~33% des maisons
+
     /**
-     * Optimise le réseau avec stratégie hybride :
+     * Optimise le réseau avec stratégie hybride avancée:
      * 1. Hill Climbing exhaustif (teste tous les générateurs pour chaque maison)
      * 2. Perturbations aléatoires pour échapper aux minima locaux
      * 3. Redémarrages multiples pour explorer l'espace des solutions
@@ -37,7 +44,7 @@ public class Optimiseur {
         System.out.println("Démarrage optimisation hybride (" + nbRedemarrages + " redémarrages)...");
 
         for (int redemarrage = 0; redemarrage < nbRedemarrages; redemarrage++) {
-            // Phase 1: Hill Climbing 
+            // Phase 1: Hill Climbing exhaustif
             boolean ameliore = true;
             int iterHC = 0;
             
@@ -80,8 +87,8 @@ public class Optimiseur {
             double coutApresHC = reseau.calculerCoutSilencieux();
 
             // Phase 2: Simulated Annealing pour échapper au minimum local
-            double temperature = coutApresHC * 0.5; // Température initiale
-            double refroidissement = 0.95;
+            double temperature = coutApresHC * TEMP_INIT_FACTOR; // Température initiale
+            double refroidissement = COOLING_FACTOR;
             int iterSA = iterationsParRedemarrage / 2;
 
             for (int i = 0; i < iterSA; i++) {
@@ -122,7 +129,7 @@ public class Optimiseur {
 
             // Phase 3: Perturbation pour le prochain redémarrage (sauf dernier)
             if (redemarrage < nbRedemarrages - 1) {
-                int nbPerturbations = maisons.size() / 3; // Perturber 1/3 des maisons
+                int nbPerturbations = Math.max(1, (int) Math.round(maisons.size() * PERTURBATION_FRACTION)); // Perturber ~33% des maisons
                 for (int p = 0; p < nbPerturbations; p++) {
                     Maison m = maisons.get(random.nextInt(maisons.size()));
                     Generateur g = generateurs.get(random.nextInt(generateurs.size()));
