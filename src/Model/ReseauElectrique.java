@@ -1,7 +1,10 @@
+
 package Model;
+
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -178,6 +181,36 @@ public class ReseauElectrique {
         }
     }
 
+    public void supprimerGenerateur(String nom) {
+        String key = nom.toUpperCase();
+        Generateur gen = generateurs.get(key);
+        if (gen != null) {
+            // Déconnecter toutes les maisons
+            for (Maison m : new ArrayList<>(gen.getMaisonsConnectees())) {
+                gen.retirerMaison(m);
+            }
+            generateurs.remove(key);
+            System.out.println("Générateur " + key + " supprimé.");
+        } else {
+            System.out.println("Générateur " + key + " introuvable.");
+        }
+    }
+
+    public void supprimerMaison(String nom) {
+        String key = nom.toUpperCase();
+        Maison maison = maisons.get(key);
+        if (maison != null) {
+            // Déconnecter du générateur si connectée
+            if (maison.getGenerateur() != null) {
+                maison.getGenerateur().retirerMaison(maison);
+            }
+            maisons.remove(key);
+            System.out.println("Maison " + key + " supprimée.");
+        } else {
+            System.out.println("Maison " + key + " introuvable.");
+        }
+    }
+
     // ============================================================================
     // MÉTHODES DE GESTION DES CONNEXIONS
     // ============================================================================
@@ -321,9 +354,9 @@ public class ReseauElectrique {
         }
     }
 
-    // ============================================================================
-
-    // MÉTHODES DE CALCUL DU COÛT
+    public int getPenalite() {
+        return penalite;
+    }
 
     /**
         * Calcule la dispersion des taux d'utilisation des générateurs.

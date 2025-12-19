@@ -1,4 +1,5 @@
 package Model;
+
 public enum TypeConsommation {
     BASSE(10),
     NORMAL(20),

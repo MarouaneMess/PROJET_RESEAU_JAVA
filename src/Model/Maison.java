@@ -1,4 +1,5 @@
 package Model;
+
 public class Maison {
     private String nom;
     private TypeConsommation typeConsommation;

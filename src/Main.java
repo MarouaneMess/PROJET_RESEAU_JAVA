@@ -1,5 +1,7 @@
-import Model.*;
+
+
 import Algo.*;
+import Model.*;
 import java.util.Scanner;
 
 public class Main {
