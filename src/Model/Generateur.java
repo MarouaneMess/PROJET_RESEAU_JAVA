@@ -13,6 +13,12 @@ public class Generateur {
     private List<Maison> maisonsConnectees;
 
     public Generateur(String nom, int capaciteMax) {
+        if (nom == null || nom.isEmpty()) {
+            throw new IllegalArgumentException("Le nom du générateur ne peut pas être vide.");
+        }
+        if (capaciteMax <= 0) {
+            throw new IllegalArgumentException("La capacité doit être positive (>0).");
+        }
         this.nom = nom;
         this.capaciteMax = capaciteMax;
         this.maisonsConnectees = new ArrayList<>();

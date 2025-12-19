@@ -14,6 +14,9 @@ public class ReseauElectrique {
     private int penalite; // val par défaut = 10
  
     public ReseauElectrique(int penalite) {
+        if (penalite <= 0) {
+            throw new IllegalArgumentException("La pénalité doit être positive (>0).");
+        }
         this.maisons = new LinkedHashMap<>();
         this.generateurs = new LinkedHashMap<>();
         this.penalite = penalite;
@@ -146,13 +149,17 @@ public class ReseauElectrique {
     }
 
     public void ajouterGenerateur(String nom, int capaciteMax) {
+        if (nom == null || nom.isEmpty()) {
+            throw new IllegalArgumentException("Le nom du générateur ne peut pas être vide.");
+        }
+        if (capaciteMax <= 0) {
+            throw new IllegalArgumentException("La capacité doit être positive.");
+        }
         String nomUpper = nom.toUpperCase();
         if (generateurs.containsKey(nomUpper)) {
-            // Mise à jour de la capacité d'un générateur existant
             System.out.println("Mise à jour: Le générateur " + nomUpper + " existe déjà. Capacité mise à jour.");
             generateurs.get(nomUpper).setCapaciteMax(capaciteMax);
         } else {
-            // Création d'un nouveau générateur (nom stocké en majuscules)
             generateurs.put(nomUpper, new Generateur(nomUpper, capaciteMax));
             System.out.println("Générateur " + nomUpper + " ajouté avec succès.");
         }

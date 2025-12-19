@@ -6,6 +6,12 @@ public class Maison {
     private Generateur generateur;
 
     public Maison(String nom, TypeConsommation typeConsommation) {
+        if (nom == null || nom.isEmpty()) {
+            throw new IllegalArgumentException("Le nom de la maison ne peut pas être vide.");
+        }
+        if (typeConsommation == null) {
+            throw new IllegalArgumentException("Le type de consommation ne peut pas être null.");
+        }
         this.nom = nom;
         this.typeConsommation = typeConsommation;
         this.consommation = typeConsommation.getValeur();
