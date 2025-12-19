@@ -17,15 +17,16 @@ L'objectif est de **rééquilibrer les charges** entre les générateurs pour mi
 
 ---
 
-## Stratégie Algorithmique: Hill Climbing Multi-Passes avec Perturbations
+## Stratégie Algorithmique: Hill Climbing Multi-Passes avec Perturbations Adaptatives
 
 ### Principe Général
 
-L'algorithme utilise une approche **constructive et itérative**:
+L'algorithme utilise une approche **constructive et itérative avec adaptation dynamique**:
 
 1. **Hill Climbing exhaustif**: À chaque itération, pour chaque maison, on teste le déplacement vers TOUS les générateurs disponibles et on garde le meilleur.
-2. **Multi-passes**: On répète cette recherche plusieurs fois jusqu'à convergence.
-3. **Perturbations légères**: Entre deux passes, on perturbe aléatoirement 20% des affectations pour échapper aux minima locaux.
+2. **Multi-passes agressives**: On répète cette recherche plusieurs fois (5-15 passes selon k), chaque passe convergeant sur un minimum local différent.
+3. **Perturbations ADAPTATIVES**: Entre deux passes, on perturbe aléatoirement 33% des affectations (ou 50% en cas de stagnation) pour échapper efficacement aux minima locaux.
+4. **Détection de stagnation**: Si le coût n'améliore pas entre deux passes, la perturbation devient plus agressive (50% au lieu de 33%).
 
 
 ---
@@ -36,13 +37,13 @@ L'algorithme utilise une approche **constructive et itérative**:
 ```
 Charger la configuration initiale depuis le fichier
 Calculer le coût initial
-Déterminer le nombre de passes: nbPasses = max(3, min(10, k/50))
+Déterminer le nombre de passes: nbPasses = max(5, min(15, k/30))
 ```
 
-Le nombre de passes dépend du paramètre k:
-- **k=50**: 3 passes
-- **k=100**: 2 passes × max(3, 100/50) = 3 passes
-- **k=500**: 5-10 passes (limité à 10 pour éviter trop de redémarrages)
+Le nombre de passes dépend du paramètre k (plus agressif qu'avant):
+- **k=100**: 5 passes
+- **k=1000**: 10 passes
+- **k=100000**: 15 passes (maximum)
 
 ### Phase 2: Hill Climbing Exhaustif (pour chaque passe)
 
@@ -76,11 +77,16 @@ TANT QUE amélioration ET iterationsPass < k/nbPasses:
 
 **Arrêt**: Convergence locale (aucune amélioration) ou atteinte du budget d'itérations.
 
-### Phase 3: Perturbation (entre deux passes)
+### Phase 3: Perturbation Adaptative (entre deux passes)
 
 ```
 SI passe < nbPasses - 1:
-    nbPerturbations ← max(1, arrondir(maisons.size() × 0.20))
+    SI (coûtActuel - coûtPrécédent) ≈ 0:  // Détection stagnation
+        fractionPerturbation ← 0.50  // 50% des maisons perturbées
+    SINON:
+        fractionPerturbation ← 0.33  // 33% des maisons perturbées
+    
+    nbPerturbations ← max(1, arrondir(maisons.size() × fractionPerturbation))
     
     POUR i = 1 À nbPerturbations:
         Choisir une maison aléatoire
@@ -88,43 +94,47 @@ SI passe < nbPasses - 1:
         Déplacer la maison (même si plus cher)
 ```
 
-**Objectif**: Sortir du minimum local pour explorer une région différente.
+**Objectif**: 
+- Sortir du minimum local pour explorer une région différente
+- Augmenter l'agressivité automatiquement si stagnation détectée
 
 ---
 
 ## Paramètres et Justifications
 
-### Nombre de Passes: `nbPasses = max(3, min(10, k/50))`
+### Nombre de Passes: `nbPasses = max(5, min(15, k/30))`
 
 | Paramètre k | nbPasses | Raison |
 |---|---|---|
-| 50 | 3 | Minimum acceptable pour explorer plusieurs régions |
-| 100 | 2-3 | Équilibre entre temps et qualité |
-| 500 | 10 | Maximum pour éviter trop de perturbations |
-| 1000+ | 10 | Limité à 10 passes (budget disponible par passe augmente) |
+| 100 | 5 | Exploration minimale |
+| 1000 | 10 | Bon équilibre exploration/exploitation |
+| 10000 | 15 | Maximum pour exploration agressive |
+| 100000 | 15 | Maximé (chaque passe dispose de 6666 itérations) |
 
-**Justification**: Plus k est grand, plus on a de budget d'itérations par passe, donc on peut faire moins de passes mais plus profondes.
+**Justification**: Plus k est grand, plus on a de budget d'itérations par passe, donc on peut faire plus de passes pour explorer davantage.
 
-### Fraction de Perturbation: `PERTURBATION_FRACTION = 0.20`
+### Fraction de Perturbation: `PERTURBATION_FRACTION = 0.33 (base) ou 0.50 (stagnation)`
 
 ```java
-nbPerturbations = max(1, (int)(maisons.size() * 0.20))
+IF (coutActuel - coutPrecedent) < 0.001:
+    fractionPerturbation = 0.50  // 50% agressif si stagnation
+ELSE:
+    fractionPerturbation = 0.33  // 33% normal
 ```
 
-- **20% = 1 maison sur 5 perturbée** entre chaque passe
-- Assez agressif pour changer la région explorée
-- Pas trop agressif pour garder les améliorations faites par HC
+- **Perturbation normale (33%)**: 1 maison sur 3 perturbée
+- **Perturbation agressive (50%)**: 1 maison sur 2 perturbée (détection stagnation)
 
-| Taille réseau | Maisons perturbées |
-|---|---|
-| 5 maisons | 1 maison |
-| 10 maisons | 2 maisons |
-| 50 maisons | 10 maisons |
+| Taille réseau | Normal | Stagnation |
+|---|---|---|
+| 5 maisons | 2 maisons | 3 maisons |
+| 9 maisons | 3 maisons | 5 maisons |
+| 50 maisons | 17 maisons | 25 maisons |
 
-**Pourquoi 20%?** C'est un compromis empirique:
-- 10% = pas assez de perturbation, reste trop longtemps dans même région
-- 20% = bon équilibre, change la région sans tout gâcher
-- 33% = trop agressif, perd les bons changements du HC
+**Pourquoi cette stratégie?** 
+- 33% = bon équilibre pour explorer sans tout gâcher
+- Augmenter à 50% automatiquement si on stagne = réaction intelligente aux minima durs
+- Contrairement à la version précédente (20% fixe), c'est **adaptatif**
 
 ### Budget d'Itérations par Passe: `k / nbPasses`
 

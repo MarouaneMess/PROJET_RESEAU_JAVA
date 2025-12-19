@@ -7,15 +7,15 @@ import java.util.Random;
 
 public class Optimiseur {
 
-    // Paramètre de perturbation entre passes (fraction de maisons perturbées)
-    private static final double PERTURBATION_FRACTION = 0.20; // 20% des maisons
+    // Paramètre de perturbation: plus agressif pour mieux explorer l'espace
+    private static final double PERTURBATION_FRACTION = 0.33; // 33% des maisons
 
     /**
-     * Optimise le réseau avec stratégie simplifiée et efficace:
-     * 1. Hill Climbing exhaustif (teste tous les générateurs pour chaque maison)
-     * 2. Multi-passes avec perturbations légères pour échapper aux minima locaux
-     * 
-     * Plus simple que SA, presque aussi efficace, déterministe sur chaque passe.
+     * Optimise le réseau avec stratégie adaptative:
+     * 1. Hill Climbing exhaustif par passe (tests exhaustifs)
+     * 2. Perturbations AGRESSIVES entre passes (33% au lieu de 20%)
+     * 3. Multi-passes pour explorer plusieurs bassins
+     * 4. Détection de stagnation: augmente perturbation si pas d'amélioration
      */
     public static void optimiserReseau(ReseauElectrique reseau, int k) {
         if (reseau == null) return;
@@ -31,16 +31,18 @@ public class Optimiseur {
         double meilleurCoutGlobal = coutInitial;
         List<ConfigurationMaison> meilleurConfig = sauvegarderConfiguration(maisons);
         
-        // Nombre de passes : minimum 3, maximum 10, basé sur k
-        int nbPasses = Math.max(3, Math.min(10, k / 50));
+        // Nombre de passes : plus agressif avec gros k
+        int nbPasses = Math.max(5, Math.min(15, k / 30)); // Min 5 passes, Max 15
         int ameliorationsTotal = 0;
+        double coutPrecedent = coutInitial;
 
-        System.out.println("Démarrage optimisation (" + nbPasses + " passes HC)...");
+        System.out.println("Démarrage optimisation (" + nbPasses + " passes HC adaptative)...");
 
         for (int passe = 0; passe < nbPasses; passe++) {
             // Hill Climbing exhaustif jusqu'à convergence
             boolean ameliore = true;
             int iterationsPass = 0;
+            int ameliorationsPass = 0;
             
             while (ameliore && iterationsPass < k / nbPasses) {
                 ameliore = false;
@@ -72,6 +74,7 @@ public class Optimiseur {
                         if (ancienGen != null) ancienGen.retirerMaison(m);
                         meilleurGen.ajouterMaison(m);
                         ameliorationsTotal++;
+                        ameliorationsPass++;
                         ameliore = true;
                     }
                 }
@@ -84,12 +87,19 @@ public class Optimiseur {
             if (coutActuel < meilleurCoutGlobal) {
                 meilleurCoutGlobal = coutActuel;
                 meilleurConfig = sauvegarderConfiguration(maisons);
-                System.out.println("  Passe " + (passe + 1) + ": nouveau meilleur → " + String.format("%.2f", coutActuel));
+                System.out.println("  Passe " + (passe + 1) + ": nouveau meilleur → " + String.format("%.3f", coutActuel));
             }
 
-            // Perturbation légère pour la prochaine passe (sauf dernière)
+            // Perturbation ADAPTATIVE pour la prochaine passe
             if (passe < nbPasses - 1) {
-                int nbPerturbations = Math.max(1, (int) (maisons.size() * PERTURBATION_FRACTION));
+                // Si stagnation (pas d'amélioration), perturbation PLUS agressif
+                double fractionPerturbation = PERTURBATION_FRACTION;
+                if (Math.abs(coutActuel - coutPrecedent) < 0.001) {
+                    // Stagnation détectée: augmenter perturbation à 50%
+                    fractionPerturbation = 0.50;
+                }
+                
+                int nbPerturbations = Math.max(1, (int) Math.round(maisons.size() * fractionPerturbation));
                 for (int p = 0; p < nbPerturbations; p++) {
                     Maison m = maisons.get(random.nextInt(maisons.size()));
                     Generateur g = generateurs.get(random.nextInt(generateurs.size()));
@@ -101,13 +111,15 @@ public class Optimiseur {
                     }
                 }
             }
+            
+            coutPrecedent = coutActuel;
         }
 
         // Restaurer la meilleure configuration
         restaurerConfiguration(meilleurConfig);
         
         System.out.println("Optimisation terminée: " + ameliorationsTotal + " améliorations.");
-        System.out.println("Coût: " + String.format("%.2f", coutInitial) + " → " + String.format("%.2f", meilleurCoutGlobal) 
+        System.out.println("Coût: " + String.format("%.3f", coutInitial) + " → " + String.format("%.3f", meilleurCoutGlobal) 
                          + " (amélioration: " + String.format("%.1f%%", (coutInitial - meilleurCoutGlobal) / coutInitial * 100) + ")");
     }
 
