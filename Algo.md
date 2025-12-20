@@ -134,7 +134,6 @@ ELSE:
 **Pourquoi cette stratégie?** 
 - 33% = bon équilibre pour explorer sans tout gâcher
 - Augmenter à 50% automatiquement si on stagne = réaction intelligente aux minima durs
-- Contrairement à la version précédente (20% fixe), c'est **adaptatif**
 
 ### Budget d'Itérations par Passe: `k / nbPasses`
 
@@ -152,7 +151,7 @@ Cela garantit une **distribution équitable du temps** entre exploration (passes
 ```
 Avantages: Ultra simple, déterministe
 Inconvénients: Se bloque rapidement dans minima locaux
-Résultat: Mauvais sur instances complexes (1, 3, 4)
+Résultat: Mauvais sur instances (1, 3, 4) 
 ```
 
 
@@ -164,8 +163,6 @@ Avantages:
   - Efficace sur toutes les instances
   - Stable et reproductible
   
-Inconvénients:
-  - Peut rester dans minima locaux si k petit
   
 Mitigation:
   - Perturbations garantissent exploration
@@ -269,18 +266,6 @@ Certaines maisons peuvent être perturbées plusieurs fois.
 
 ---
 
-## Guide d'Utilisation
-
-### Mode CLI
-```bash
-java Main chemin/fichier.txt λ
-```
-Exemple:
-```bash
-java Main instance1.txt 1
-java Main instance2.txt 2.5
-```
-
 
 ### Interprétation des Résultats
 - **Amélioration faible (< 10%)**: Configuration initiale déjà bonne OU k trop petit
@@ -289,10 +274,4 @@ java Main instance2.txt 2.5
 
 ---
 
-## Conclusion
-
-Cet algorithme privilégie la **simplicité et la robustesse**:
-- ✅ Déterministe (pour un budget k donné)
-- ✅ Efficace sur tous les types d'instances
-- ✅ Budget adaptatif selon k
 

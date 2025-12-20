@@ -2,89 +2,173 @@
 
 Projet Java pour la gestion et l'optimisation d'un réseau électrique composé de générateurs et de maisons.
 
+## Structure du projet
+
+```
+src/
+├── Main.java                 # Point d'entrée: routeur vers les menus
+├── Menu/
+│   ├── MenuAutomatique.java  # Menu du mode automatique (optimisation+sauvegarde)
+│   ├── MenuConstruction.java # Menu de construction (ajouts, connexions)
+│   └── MenuOperation.java    # Menu d'opération (modifications, coûts, affichage)
+├── Modele/
+│   ├── Generateur.java       # Modèle du générateur électrique
+│   ├── Maison.java           # Modèle de la maison consommatrice
+│   ├── ReseauElectrique.java # Gestionnaire du réseau complet
+│   └── TypeConsommation.java # Enum des types de consommation
+└── Algo/
+    ├── Optimiseur.java       # Algorithmes d'optimisation du réseau
+    └── Sauvegarde.java       # Sauvegarde des solutions
+```
+
 ## Aperçu du modèle
 
-- `Maison`
-	- Attributs: `nom`, `typeConsommation` (enum), `consommation` (kW), `generateur` (lien)
-	- La consommation est déduite du type.
+- **`Maison`**
+  - Attributs: `nom`, `typeConsommation` (enum), `consommation` (kW), `generateur` (lien)
+  - La consommation est déduite du type
+  - Une maison peut être connectée à un seul générateur
 
-- `TypeConsommation` (enum)
-	- `BASSE=10 kW`, `NORMAL=20 kW`, `FORTE=40 kW`.
+- **`TypeConsommation`** (enum)
+  - `BASSE=10 kW`, `NORMAL=20 kW`, `FORTE=40 kW`
 
-- `Generateur`
-	- Attributs: `nom`, `capaciteMax` (kW), `maisonsConnectees` (liste)
-	- Métriques: `getChargeActuelle()` = somme des consommations des maisons connectées, `calculerTauxUtilisation()` = Lg/Cg.
+- **`Generateur`**
+  - Attributs: `nom`, `capaciteMax` (kW), `maisonsConnectees` (liste)
+  - Métriques: `getChargeActuelle()` = somme des consommations, `calculerTauxUtilisation()` = Lg/Cg
 
-- `ReseauElectrique`
-	- Stocke `maisons` et `generateurs` dans des `HashMap` pour des accès en O(1) moyen.
-	- Paramètre `penalite` (λ) pour pondérer les surcharges.
-	- Opérations: ajout de générateurs/maisons, connexions, vérification du réseau, calculs de dispersion/surcharge/coût, affichage du réseau.
+- **`ReseauElectrique`**
+  - Stocke `maisons` et `generateurs` dans des `LinkedHashMap` (ordre d'insertion préservé)
+  - Paramètre `penalite` (λ) pour pondérer les surcharges (par défaut: 10)
+  - Chargement depuis fichier avec validation syntaxique
+  - Opérations: ajout/suppression/modification de connexions, calculs de coût, affichage
 
-## API principale (résumé)
+## API principale
 
-- `void ajouterGenerateur(String nom, int capaciteMax)`
-- `void ajouterMaison(String nom, String typeConsommationStr)`
-	- `typeConsommationStr` ∈ {`BASSE`, `NORMAL`, `FORTE`} (insensible à la casse).
-- `void ajouterConnexion(String nom1, String nom2)`
-	- Accepte l’ordre indifféremment (Maison, Générateur) ou (Générateur, Maison).
-	- Remarque: cette méthode crée le lien bidirectionnel en ajoutant la maison au générateur (et met à jour la maison). Pour déplacer une maison d’un générateur A vers B, utilisez plutôt `modifierConnexion` (voir ci-dessous) afin de nettoyer l’ancienne connexion.
- - `void ajouterConnexion(String nom1, String nom2)`
-	- Accepte l’ordre indifféremment (Maison, Générateur) ou (Générateur, Maison).
-	- Remarque: cette méthode crée le lien bidirectionnel en ajoutant la maison au générateur (et met à jour la maison). Pour déplacer une maison d’un générateur A vers B, utilisez plutôt `modifierConnexion` (voir ci-dessous) afin de nettoyer l’ancienne connexion.
+### Construction du réseau
 
-- `void supprimerConnexion(String nom1, String nom2)`
-	- Supprime une connexion existante entre une maison et un générateur.
-	- Accepte l'ordre indifféremment (`M1 G1` ou `G1 M1`) et est insensible à la casse (les clés sont normalisées en majuscules en interne).
-	- Vérifie que la maison et le générateur existent; imprime un message d'erreur si l'un des deux est absent.
-	- Vérifie que la connexion existe réellement avant suppression; imprime une erreur si aucune connexion n'est trouvée.
-	- Retire la maison de la liste `maisonsConnectees` du générateur et met à jour le lien côté `Maison`.
-	- Exemple d'utilisation dans `Main.java`: `reseau.supprimerConnexion("M1", "G1");`
-- `void modifierConnexion(String nomMaisonOld, String nomGenOld, String nomMaisonNew, String nomGenNew)`
-	- Vérifie que la connexion (maison, ancien générateur) existe, la retire puis crée la nouvelle connexion.
-- `boolean verifierReseau()`
-	- Vérifie que chaque maison est connectée à un générateur (exactement un côté Maison → Générateur).
-- `double calculerDispersion()`
-- `double calculerSurcharge()`
-- `double calculerCout()`
-- `void afficherReseau()`
+- **`ReseauElectrique(int penalite)`** throws `IllegalArgumentException`
+  - Constructeur avec pénalité personnalisée (doit être > 0)
+
+- **`boolean chargerDepuisFichier(String chemin)`** throws `IOException`, `IllegalArgumentException`
+  - Charge un réseau depuis un fichier texte
+  - Format: `Generateur(nom:capacite)` puis `Connexion(maison,type,generateur)`
+
+- **`void ajouterGenerateur(String nom, int capaciteMax)`** throws `IllegalArgumentException`
+  - Ajoute un générateur (capacité > 0)
+
+- **`void ajouterMaison(String nom, String typeConsommationStr)`** throws `IllegalArgumentException`
+  - Ajoute une maison avec type ∈ {`BASSE`, `NORMAL`, `FORTE`}
+
+### Gestion des connexions
+
+- **`void ajouterConnexion(String nom1, String nom2)`** throws `IllegalArgumentException`
+  - Crée une connexion entre une maison et un générateur
+  - Accepte l'ordre indifféremment (M1 G1 ou G1 M1)
+  - Vérifie qu'aucune connexion n'existe déjà pour cette maison
+
+- **`void supprimerConnexion(String nom1, String nom2)`** throws `IllegalArgumentException`
+  - Supprime une connexion existante
+  - Vérifie l'existence de la connexion avant suppression
+
+- **`void modifierConnexion(String nomMaisonOld, String nomGenOld, String nomMaisonNew, String nomGenNew)`** throws `IllegalArgumentException`
+  - Déplace une maison d'un générateur à un autre
+  - Gère automatiquement la suppression et la création
+
+### Calculs et vérifications
+
+- **`boolean verifierReseau()`**
+  - Vérifie que chaque maison est connectée à exactement un générateur
+
+- **`double calculerDispersion()`**
+  - Calcule la dispersion des taux d'utilisation
+
+- **`double calculerSurcharge()`**
+  - Calcule la surcharge normalisée totale
+
+- **`double calculerCout()`**
+  - Calcule le coût total = dispersion + λ × surcharge
+
+- **`void afficherReseau()`**
+  - Affiche l'état complet du réseau
+
+## Gestion des exceptions
+
+Le projet utilise exclusivement des **exceptions standard Java**:
+
+- **`IllegalArgumentException`** - Paramètres invalides:
+  - Valeurs null ou vides
+  - Valeurs négatives ou nulles (penalite, capacité)
+  - Éléments inexistants (maison/générateur introuvable)
+  - Connexions impossibles (déjà connectée, inexistante)
+  - Types de consommation invalides
+
+- **`IOException`** - Opérations fichier:
+  - Erreur de lecture lors du chargement
+  - Erreur d'écriture lors de la sauvegarde
+
+- **`NumberFormatException`** - Parsing:
+  - Format numérique invalide dans les fichiers ou entrées utilisateur
+
+Toutes les méthodes publiques valident leurs paramètres et lancent des exceptions appropriées.
 
 ## Formules et métriques
 
-Soit, pour chaque générateur g:
-- Lg: charge actuelle (somme des consommations des maisons connectées à g)
-- Cg: capacité maximale du générateur g
-- ug = Lg/Cg: taux d’utilisation
+Pour chaque générateur g:
+- **Lg**: charge actuelle (somme des consommations)
+- **Cg**: capacité maximale
+- **ug = Lg/Cg**: taux d'utilisation
 
-1) Dispersion des taux d’utilisation
+**1) Dispersion des taux d'utilisation:**
+```
+Disp(S) = Σg |ug − ū|
+```
+où ū est la moyenne des taux d'utilisation.
 
-	 Disp(S) = Σg |ug − ū|, où ū est la moyenne des `ug` sur tous les générateurs.
-
-2) Surcharge totale (normalisée)
-
-	 Surcharge(S) = Σg max(0, ug − 1)
-
-3) Coût total
-
-	 Cout(S) = Disp(S) + λ × Surcharge(S)
-
-Ces formules sont implémentées dans `ReseauElectrique` via `calculerDispersion`, `calculerSurcharge` et `calculerCout`.
-
-## Choix de conception: Map vs HashMap
-
-- On déclare les champs en type `Map<K,V>` mais on instancie en `HashMap<>`.
-- `HashMap` offre des opérations `get/put/containsKey` en O(1) moyen, suffisant ici car l’ordre d’itération n’est pas requis.
-- On peut remplacer plus tard par `LinkedHashMap` (ordre d’insertion) ou `TreeMap` (clés triées) sans changer les signatures publiques.
-
-
-```powershell
-# Compilation des sources du modèle + Main
-javac -d bin src/Model/*.java src/Main.java
-
-# Exécution
-java -cp bin Main
+**2) Surcharge totale (normalisée):**
+```
+Surcharge(S) = Σg max(0, ug − 1)
 ```
 
-## Idées d’amélioration
+**3) Coût total:**
+```
+Cout(S) = Disp(S) + λ × Surcharge(S)
+```
 
-- Valider les entrées ( noms uniques non vides).
-- Empêcher une maison d’être rattachée à plusieurs générateurs simultanément côté structure (en forçant le retrait automatique de l’ancien lien lors d’une nouvelle connexion).
+## Utilisation
+
+### Mode automatique (avec fichier)
+```bash
+javac -d bin src/Main.java src/Modele/*.java src/Algo/*.java src/Menu/*.java
+java -cp bin Main instance/instance1.txt 10
+```
+- Charge le réseau depuis le fichier
+- Pénalité = 10
+- Menu d'optimisation automatique disponible
+
+### Mode interactif (construction manuelle)
+```bash
+java -cp bin Main
+```
+- Phase de construction: créer le réseau manuellement
+- Phase d'opération: modifier et calculer les coûts
+
+```
+
+## Algorithmes d'optimisation
+
+- **`Optimiseur.optimiserReseau(reseau, k)`** throws `IllegalArgumentException`
+  - Optimise le réseau par k tentatives d'amélioration
+  - Utilise une stratégie de recherche locale
+  - Déplace les maisons pour minimiser le coût total
+
+- **`Sauvegarde.sauvegarderSolution(reseau, nomFichier)`** throws `IOException`, `IllegalArgumentException`
+  - Sauvegarde la configuration actuelle dans un fichier
+  - Format réutilisable pour rechargement
+
+## Choix de conception
+
+- **LinkedHashMap** pour préserver l'ordre d'insertion des générateurs/maisons
+- **Validation stricte** avec exceptions pour toutes les entrées
+- **Normalisation** des noms en majuscules pour recherche insensible à la casse
+- **Séparation claire** entre modèle (Modele/), algorithmes (Algo/), menus (Menu/) et routeur (Main)
+- **Exceptions standard** Java uniquement (pas de classes d'exception personnalisées)
+- **Accès O(1)** pour la recherche de maisons et générateurs par nom

@@ -1,6 +1,5 @@
 package Algo;
-import Model.*;
-
+import Modele.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
@@ -13,12 +12,17 @@ public class Optimiseur {
     /**
      * Optimise le réseau avec stratégie adaptative:
      * 1. Hill Climbing exhaustif par passe (tests exhaustifs)
-     * 2. Perturbations AGRESSIVES entre passes (33% au lieu de 20%)
+     * 2. Perturbations AGRESSIVES entre passes (33% des maisons)
      * 3. Multi-passes pour explorer plusieurs bassins
      * 4. Détection de stagnation: augmente perturbation si pas d'amélioration
      */
-    public static void optimiserReseau(ReseauElectrique reseau, int k) {
-        if (reseau == null) return;
+    public static void optimiserReseau(ReseauElectrique reseau, int k) throws IllegalArgumentException {
+        if (reseau == null) {
+            throw new IllegalArgumentException("Le réseau ne peut pas être null.");
+        }
+        if (k <= 0) {
+            throw new IllegalArgumentException("Le nombre de tentatives doit être positif.");
+        }
         List<Maison> maisons = new ArrayList<>(reseau.getMaisons());
         List<Generateur> generateurs = new ArrayList<>(reseau.getGenerateurs());
         if (maisons.isEmpty() || generateurs.isEmpty()) {
@@ -42,7 +46,6 @@ public class Optimiseur {
             // Hill Climbing exhaustif jusqu'à convergence
             boolean ameliore = true;
             int iterationsPass = 0;
-            int ameliorationsPass = 0;
             
             while (ameliore && iterationsPass < k / nbPasses) {
                 ameliore = false;
@@ -74,7 +77,6 @@ public class Optimiseur {
                         if (ancienGen != null) ancienGen.retirerMaison(m);
                         meilleurGen.ajouterMaison(m);
                         ameliorationsTotal++;
-                        ameliorationsPass++;
                         ameliore = true;
                     }
                 }
@@ -152,11 +154,16 @@ public class Optimiseur {
     }
 
     /**
-     * Algorithme naïf original (aléatoire pur).
+     * Algorithme naïf original .
      * Gardé pour comparaison.
      */
-    public static void optimiserNaif(ReseauElectrique reseau, int k) {
-        if (reseau == null) return;
+    public static void optimiserNaif(ReseauElectrique reseau, int k) throws IllegalArgumentException {
+        if (reseau == null) {
+            throw new IllegalArgumentException("Le réseau ne peut pas être null.");
+        }
+        if (k <= 0) {
+            throw new IllegalArgumentException("Le nombre de tentatives doit être positif.");
+        }
         List<Maison> maisons = new ArrayList<>(reseau.getMaisons());
         List<Generateur> generateurs = new ArrayList<>(reseau.getGenerateurs());
         if (maisons.isEmpty() || generateurs.isEmpty()) return;

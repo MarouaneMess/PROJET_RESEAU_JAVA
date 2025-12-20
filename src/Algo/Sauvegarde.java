@@ -1,12 +1,30 @@
 package Algo;
-import Model.*;
+import Modele.*;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 
 
 public class Sauvegarde {
-    public static boolean sauvegarderSolution(ReseauElectrique reseau, String nomFichier) {
-        try (PrintWriter writer = new PrintWriter(nomFichier)) {
+    private static final String DOSSIER_AMELIOREES = "instancesAmeliorees";
+
+    public static void sauvegarderSolution(ReseauElectrique reseau, String nomFichier) throws IOException, IllegalArgumentException {
+        if (reseau == null) {
+            throw new IllegalArgumentException("Le réseau ne peut pas être null.");
+        }
+        if (nomFichier == null || nomFichier.trim().isEmpty()) {
+            throw new IllegalArgumentException("Le nom du fichier ne peut pas être vide.");
+        }
+        
+        try {
+            Files.createDirectories(Paths.get(DOSSIER_AMELIOREES));
+        } catch (IOException e) {
+            throw new IOException("Erreur création du dossier " + DOSSIER_AMELIOREES + ": " + e.getMessage(), e);
+        }
+        
+        String cheminFichier = DOSSIER_AMELIOREES + "/" + nomFichier;
+        try (PrintWriter writer = new PrintWriter(cheminFichier)) {
             for (Generateur gen : reseau.getGenerateurs()) {
                 writer.println("generateur(" + gen.getNom() + "," + gen.getCapaciteMax() + ").");
             }
@@ -18,10 +36,8 @@ public class Sauvegarde {
                     writer.println("connexion(" + gen.getNom() + "," + maison.getNom() + ").");
                 }
             }
-            return true;
         } catch (IOException e) {
-            System.out.println("Erreur d'écriture: " + e.getMessage());
-            return false;
+            throw new IOException("Erreur d'écriture du fichier: " + e.getMessage(), e);
         }
     }
 }

@@ -1,4 +1,4 @@
-package Model;
+package Modele;
 public enum TypeConsommation {
     BASSE(10),
     NORMAL(20),

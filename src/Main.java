@@ -1,29 +1,34 @@
-import Model.*;
-import Algo.*;
+import Modele.*;
+import Menu.*;
 import java.util.Scanner;
+import java.io.IOException;
 
 public class Main {
 
     private static Scanner scanner = new Scanner(System.in);
 
     public static void main(String[] args) {
-        // Mode automatique avec fichier et pénalité en arguments
         if (args.length >= 2) {
             String cheminFichier = args[0];
             int penalite;
             try {
                 penalite = Integer.parseInt(args[1]);
-                if (penalite <= 0) {
-                    System.out.println("Erreur: La pénalité doit être un entier positif.");
-                    return;
-                }
             } catch (NumberFormatException e) {
                 System.out.println("Erreur: La pénalité doit être un entier valide.");
                 return;
             }
 
-            ReseauElectrique reseau = new ReseauElectrique(penalite);
-            if (!reseau.chargerDepuisFichier(cheminFichier)) {
+            ReseauElectrique reseau;
+            try {
+                reseau = new ReseauElectrique(penalite);
+            } catch (IllegalArgumentException e) {
+                System.out.println("Erreur: " + e.getMessage());
+                return;
+            }
+
+            try {
+                reseau.chargerDepuisFichier(cheminFichier);
+            } catch (IOException | IllegalArgumentException e) {
                 System.out.println("Échec du chargement. Programme arrêté.");
                 return;
             }
@@ -33,200 +38,23 @@ public class Main {
                 return;
             }
 
-            // reseau.afficherReseau();
             System.out.println("\n=== MODE AUTOMATIQUE ===");
-            menuAutomatique(reseau);
-        }
-        // Mode manuel (partie 1)
-        else {
-            ReseauElectrique reseau = new ReseauElectrique(10);
+            MenuAutomatique.run(reseau, scanner);
+        } else {
+            ReseauElectrique reseau;
+            try {
+                reseau = new ReseauElectrique(10);
+            } catch (IllegalArgumentException e) {
+                System.out.println("Erreur: " + e.getMessage());
+                return;
+            }
             System.out.println("=== PHASE DE CONSTRUCTION ===");
-            phaseConstruction(reseau);
+            MenuConstruction.run(reseau, scanner);
 
             System.out.println("\n=== PHASE D'OPÉRATION ===");
-            phaseOperation(reseau);
+            MenuOperation.run(reseau, scanner);
         }
 
         scanner.close();
-    }
-
-    private static void phaseConstruction(ReseauElectrique reseau) {
-        while (true) {
-            afficherMenuConstruction();
-            String choix = scanner.nextLine().trim();
-
-            switch (choix) {
-                case "0":
-                    System.out.print("Chemin du fichier réseau: ");
-                    String chemin = scanner.nextLine().trim();
-                    if (reseau.chargerDepuisFichier(chemin)) {
-                        reseau.afficherReseau();
-                    }
-                    break;
-                case "1":
-                    System.out.print("Nom et capacité du générateur (ex: G1 60): ");
-                    String[] inputGen = scanner.nextLine().split("\\s+");
-                    if (inputGen.length == 2) {
-                        try {
-                            String nom = inputGen[0];
-                            int capacite = Integer.parseInt(inputGen[1]);
-                            if (capacite <= 0) {
-                                System.out.println("Erreur: La capacité doit être un entier positif.");
-                                break;
-                            }
-                            reseau.ajouterGenerateur(nom, capacite);
-                        } catch (NumberFormatException e) {
-                            System.out.println("Erreur: Capacité invalide.");
-                        }
-                    } else {
-                        System.out.println("Erreur: Format invalide.");
-                    }
-                    break;
-                case "2":
-                    System.out.print("Nom et type de maison (ex: M1 (NORMAL/ BASSE/ FORTE)): ");
-                    String[] inputMaison = scanner.nextLine().split("\\s+");
-                    if (inputMaison.length == 2) {
-                        reseau.ajouterMaison(inputMaison[0], inputMaison[1]);
-                    } else {
-                        System.out.println("Erreur: Format invalide.");
-                    }
-                    break;
-                case "3":
-                    reseau.afficherReseau();
-                    System.out.print("Connexion (ex: M1 G1): ");
-                    String[] inputCon = scanner.nextLine().split("\\s+");
-                    if (inputCon.length == 2) {
-                        reseau.ajouterConnexion(inputCon[0], inputCon[1]);
-                    } else {
-                        System.out.println("Erreur: Format invalide.");
-                    }
-                    break;
-                case "4":
-                    reseau.afficherReseau();
-                    System.out.print("Supprimer connexion (ex: M1 G1): ");
-                    String[] inputSup = scanner.nextLine().split("\\s+");
-                    if (inputSup.length == 2) {
-                        reseau.supprimerConnexion(inputSup[0], inputSup[1]);
-                    } else {
-                        System.out.println("Erreur: Format invalide.");
-                    }
-                    break;
-                case "5":
-                    if (reseau.verifierReseau()) {
-                        return; 
-                    }
-                    break;
-                
-                default:
-                    System.out.println("Choix invalide.");
-            }
-        }
-    }
-
-    private static void phaseOperation(ReseauElectrique reseau) {
-        while (true) {
-            afficherMenuOperation();
-            String choix = scanner.nextLine().trim();
-
-            switch (choix) {
-                case "1":
-                    reseau.calculerCout();
-                    break;
-                case "2":
-                    System.out.print("Connexion à modifier (ex: M1 G1): ");
-                    String[] ancienne = scanner.nextLine().split("\\s+");
-                    System.out.print("Nouvelle connexion (ex: M1 G2): ");
-                    String[] nouvelle = scanner.nextLine().split("\\s+");
-
-                    if (ancienne.length == 2 && nouvelle.length == 2) {
-                        reseau.modifierConnexion(ancienne[0], ancienne[1], nouvelle[0], nouvelle[1]);
-                    } else {
-                        System.out.println("Erreur: Format invalide.");
-                    }
-                    break;
-                case "3":
-                    reseau.afficherReseau();
-                    break;
-                case "4":
-                    System.out.println("Programme terminé.");
-                    return;
-                default:
-                    System.out.println("Choix invalide.");
-            }
-        }
-    }
-
-    private static void afficherMenuConstruction() {
-        System.out.println("\n--- MENU CONSTRUCTION ---");
-        System.out.println("0. Charger un réseau depuis un fichier");
-        System.out.println("1. Ajouter un générateur");
-        System.out.println("2. Ajouter une maison");
-        System.out.println("3. Ajouter une connexion");
-        System.out.println("4. Supprimer une connexion");
-        System.out.println("5. Fin");
-        System.out.print("Votre choix: ");
-    }
-
-    private static void afficherMenuOperation() {
-        System.out.println("\n--- MENU OPÉRATION ---");
-        System.out.println("1. Calculer le coût du réseau");
-        System.out.println("2. Modifier une connexion");
-        System.out.println("3. Afficher le réseau");
-        System.out.println("4. Fin");
-        System.out.print("Votre choix: ");
-    }
-
-    private static void menuAutomatique(ReseauElectrique reseau) {
-        while (true) {
-            afficherMenuAutomatique();
-            String choix = scanner.nextLine().trim();
-
-            switch (choix) {
-                case "1":
-                    System.out.print("Nombre de tentatives d'optimisation (k): ");
-                    try {
-                        int k = Integer.parseInt(scanner.nextLine().trim());
-                        if (k <= 0) {
-                            System.out.println("Erreur: k doit être positif.");
-                            break;
-                        }
-                        System.out.println("\n--- Résolution automatique en cours... ---");
-                        double coutInitial = reseau.calculerCoutSilencieux();
-                        Optimiseur.optimiserReseau(reseau, k);
-                        double coutFinal = reseau.calculerCoutSilencieux();
-                        double amelioration = coutInitial - coutFinal;
-                        System.out.println("\n=== RÉSULTAT ===");
-                        System.out.println("Coût initial: " + String.format("%.9f", coutInitial));
-                        System.out.println("Coût final: " + String.format("%.9f", coutFinal));
-                        System.out.println("Amélioration: " + amelioration + " (" + String.format("%.2f", amelioration/coutInitial*100) + "%)");
-                        //reseau.afficherReseau();
-                    } catch (NumberFormatException e) {
-                        System.out.println("Erreur: k doit être un entier valide.");
-                    }
-                    break;
-                case "2":
-                    System.out.print("Nom du fichier de sauvegarde: ");
-                    String nomFichier = scanner.nextLine().trim();
-                    if (Sauvegarde.sauvegarderSolution(reseau, nomFichier)) {
-                        System.out.println("Solution sauvegardée avec succès dans " + nomFichier);
-                    } else {
-                        System.out.println("Erreur lors de la sauvegarde.");
-                    }
-                    break;
-                case "3":
-                    System.out.println("Programme terminé.");
-                    return;
-                default:
-                    System.out.println("Choix invalide.");
-            }
-        }
-    }
-
-    private static void afficherMenuAutomatique() {
-        System.out.println("\n--- MENU AUTOMATIQUE ---");
-        System.out.println("1. Résolution automatique");
-        System.out.println("2. Sauvegarder la solution actuelle");
-        System.out.println("3. Fin");
-        System.out.print("Votre choix: ");
     }
 }
