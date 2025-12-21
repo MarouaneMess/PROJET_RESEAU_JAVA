@@ -6,7 +6,7 @@ Projet Java pour la gestion et l'optimisation d'un réseau électrique composé 
 
 ```
 src/
-├── Main.java                 # Point d'entrée: routeur vers les menus
+├── Main.java                 # Point d'entrée console: routeur vers les menus
 ├── Menu/
 │   ├── MenuAutomatique.java  # Menu du mode automatique (optimisation+sauvegarde)
 │   ├── MenuConstruction.java # Menu de construction (ajouts, connexions)
@@ -16,9 +16,23 @@ src/
 │   ├── Maison.java           # Modèle de la maison consommatrice
 │   ├── ReseauElectrique.java # Gestionnaire du réseau complet
 │   └── TypeConsommation.java # Enum des types de consommation
-└── Algo/
-    ├── Optimiseur.java       # Algorithmes d'optimisation du réseau
-    └── Sauvegarde.java       # Sauvegarde des solutions
+├── Algo/
+│   │── Algo.md
+│   ├── Optimiseur.java       # Algorithmes d'optimisation du réseau
+│   └── Sauvegarde.java       # Sauvegarde des solutions
+└── GUI/
+    ├── MainApp.java          # Point d'entrée de l'interface graphique (JavaFX)
+    ├── controllers/
+    │   ├── AccueilController.java      # Contrôleur de la page d'accueil
+    │   ├── ConstructionController.java # Contrôleur de la phase de construction
+    │   ├── OperationController.java    # Contrôleur de la phase d'opération
+    │   └── VisualisationController.java # Contrôleur de la visualisation du réseau
+    └── fxml/
+        ├── accueil.fxml       # Interface de la page d'accueil
+        ├── construction.fxml  # Interface de construction du réseau
+        ├── operation.fxml     # Interface d'opération et modification
+        └── visualisation.fxml # Interface de visualisation du réseau
+        
 ```
 
 ## Aperçu du modèle
@@ -135,7 +149,30 @@ Cout(S) = Disp(S) + λ × Surcharge(S)
 
 ## Utilisation
 
-### Mode automatique (avec fichier)
+Le projet propose **deux modes d'utilisation** : une interface graphique (JavaFX) et une interface console.
+
+### Interface graphique (recommandé)
+
+L'application dispose d'une interface graphique moderne développée avec JavaFX offrant :
+- **Page d'accueil** : sélection du mode (construction manuelle ou chargement depuis fichier)
+- **Phase de construction** : ajout interactif de générateurs et maisons, création de connexions
+- **Phase d'opération** : modification des connexions, calcul des métriques, optimisation
+- **Visualisation** : affichage graphique du réseau avec ses connexions
+
+#### Compilation et lancement de l'interface graphique
+```bash
+# Compilation (incluant JavaFX)
+javac -d bin --module-path <chemin-javafx>/lib --add-modules javafx.controls,javafx.fxml src/GUI/*.java src/GUI/controllers/*.java src/Modele/*.java src/Algo/*.java
+
+# Lancement
+java -cp bin --module-path <chemin-javafx>/lib --add-modules javafx.controls,javafx.fxml GUI.MainApp
+```
+
+**Note** : Remplacez `<chemin-javafx>` par le chemin vers votre installation JavaFX (ou utilisez un gestionnaire de dépendances comme Maven/Gradle).
+
+### Mode console
+
+#### Mode automatique (avec fichier)
 ```bash
 javac -d bin src/Main.java src/Modele/*.java src/Algo/*.java src/Menu/*.java
 java -cp bin Main instance/instance1.txt 10
@@ -144,14 +181,47 @@ java -cp bin Main instance/instance1.txt 10
 - Pénalité = 10
 - Menu d'optimisation automatique disponible
 
-### Mode interactif (construction manuelle)
+#### Mode interactif (construction manuelle)
 ```bash
 java -cp bin Main
 ```
 - Phase de construction: créer le réseau manuellement
 - Phase d'opération: modifier et calculer les coûts
 
-```
+## Interface graphique
+
+L'application dispose d'une **interface graphique JavaFX** offrant une expérience utilisateur intuitive pour gérer le réseau électrique.
+
+### Fonctionnalités de l'interface graphique
+
+- **Page d'accueil** (`AccueilController`)
+  - Choix entre construction manuelle ou chargement depuis fichier
+  - Configuration de la pénalité (λ)
+  - Navigation vers les différentes phases
+
+- **Phase de construction** (`ConstructionController`)
+  - Ajout interactif de générateurs (nom et capacité)
+  - Ajout de maisons avec sélection du type de consommation
+  - Création de connexions entre maisons et générateurs
+  - Validation en temps réel des entrées
+
+- **Phase d'opération** (`OperationController`)
+  - Modification des connexions existantes
+  - Calcul et affichage des métriques (dispersion, surcharge, coût)
+  - Optimisation du réseau avec paramétrage du nombre d'itérations
+  - Sauvegarde de la configuration actuelle
+
+- **Visualisation** (`VisualisationController`)
+  - Affichage graphique du réseau
+  - Représentation visuelle des connexions
+  - Informations détaillées sur chaque générateur et maison
+
+### Architecture de l'interface graphique
+
+L'interface suit une architecture **MVC (Model-View-Controller)** :
+- **Modèle** : classes dans `Modele/` (partagées avec le mode console)
+- **Vue** : fichiers FXML dans `GUI/fxml/`
+- **Contrôleur** : classes dans `GUI/controllers/`
 
 ## Algorithmes d'optimisation
 
@@ -169,6 +239,8 @@ java -cp bin Main
 - **LinkedHashMap** pour préserver l'ordre d'insertion des générateurs/maisons
 - **Validation stricte** avec exceptions pour toutes les entrées
 - **Normalisation** des noms en majuscules pour recherche insensible à la casse
-- **Séparation claire** entre modèle (Modele/), algorithmes (Algo/), menus (Menu/) et routeur (Main)
+- **Séparation claire** entre modèle (Modele/), algorithmes (Algo/), menus (Menu/), interface graphique (GUI/) et routeur (Main)
+- **Architecture MVC** pour l'interface graphique : séparation entre vues (FXML), contrôleurs et modèle
+- **Double interface** : console et graphique partagent le même modèle métier
 - **Exceptions standard** Java uniquement (pas de classes d'exception personnalisées)
 - **Accès O(1)** pour la recherche de maisons et générateurs par nom

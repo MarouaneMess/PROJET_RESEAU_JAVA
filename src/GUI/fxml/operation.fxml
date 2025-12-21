@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.geometry.Insets?>
+
+<BorderPane xmlns:fx="http://javafx.com/fxml/1" 
+            xmlns="http://javafx.com/javafx/17"
+            fx:controller="GUI.controllers.OperationController"
+            prefWidth="900" prefHeight="750">
+    
+    <top>
+        <VBox spacing="10" style="-fx-background-color: #2c3e50; -fx-padding: 20;">
+            <Label text="OPÉRATIONS SUR LE RÉSEAU" 
+                   style="-fx-font-size: 24px; -fx-text-fill: white; -fx-font-weight: bold;"/>
+            <Label text="Modifier, calculer et afficher le réseau électrique" 
+                   style="-fx-font-size: 14px; -fx-text-fill: #ecf0f1;"/>
+        </VBox>
+    </top>
+    
+    <center>
+        <HBox spacing="20" style="-fx-padding: 20;">
+            
+            <!-- Colonne gauche: coût et modification -->
+            <VBox spacing="15" prefWidth="320">
+                <!-- Section Calcul du coût -->
+                <VBox spacing="10" style="-fx-border-color: #3498db; -fx-border-width: 2; -fx-padding: 15; -fx-background-color: #ecf0f1;">
+                    <Label text="CALCUL DU COÛT" style="-fx-font-size: 16px; -fx-font-weight: bold; -fx-text-fill: #2c3e50;"/>
+                    <HBox spacing="10" alignment="CENTER_LEFT">
+                        <Button text="Calculer le Coût" onAction="#calculerCout" 
+                                style="-fx-background-color: #3498db; -fx-text-fill: white; -fx-font-size: 14px; -fx-padding: 10 20;"/>
+                        <Label fx:id="labelCout" text="Coût: - kW" 
+                               style="-fx-font-size: 14px; -fx-text-fill: #2c3e50; -fx-font-weight: bold;"/>
+                    </HBox>
+                </VBox>
+                
+                <!-- Section Modification de connexion -->
+                <VBox spacing="10" style="-fx-border-color: #e67e22; -fx-border-width: 2; -fx-padding: 15; -fx-background-color: #ecf0f1;">
+                    <Label text="MODIFIER UNE CONNEXION" style="-fx-font-size: 16px; -fx-font-weight: bold; -fx-text-fill: #2c3e50;"/>
+                    
+                    <Label text="Ancienne connexion:" style="-fx-font-size: 13px;"/>
+                    <HBox spacing="10">
+                        <ComboBox fx:id="ancienneMaison" promptText="Maison" prefWidth="150"/>
+                        <Label text="→" style="-fx-font-size: 16px;"/>
+                        <ComboBox fx:id="ancienGenerateur" promptText="Générateur" prefWidth="150"/>
+                    </HBox>
+                    
+                    <Label text="Nouvelle connexion:" style="-fx-font-size: 13px;"/>
+                    <HBox spacing="10">
+                        <ComboBox fx:id="nouvelleMaison" promptText="Maison" prefWidth="150"/>
+                        <Label text="→" style="-fx-font-size: 16px;"/>
+                        <ComboBox fx:id="nouveauGenerateur" promptText="Générateur" prefWidth="150"/>
+                    </HBox>
+                    
+                    <Button text="Modifier la Connexion" onAction="#modifierConnexion" 
+                            style="-fx-background-color: #e67e22; -fx-text-fill: white; -fx-font-size: 14px; -fx-padding: 10 20;"/>
+                </VBox>
+            </VBox>
+            
+            <!-- Colonne droite: affichage réseau -->
+            <VBox spacing="10" HBox.hgrow="ALWAYS" style="-fx-border-color: #27ae60; -fx-border-width: 2; -fx-padding: 15; -fx-background-color: #ecf0f1;">
+                <Label text="AFFICHAGE DU RÉSEAU" style="-fx-font-size: 16px; -fx-font-weight: bold; -fx-text-fill: #2c3e50;"/>
+                <TextArea fx:id="affichageReseau" prefHeight="340" editable="false" 
+                          style="-fx-font-family: 'Courier New'; -fx-font-size: 12px;" VBox.vgrow="ALWAYS" />
+                <Button text="Afficher le Réseau" onAction="#afficherReseau" 
+                        style="-fx-background-color: #27ae60; -fx-text-fill: white; -fx-font-size: 14px; -fx-padding: 10 20;"/>
+            </VBox>
+            
+        </HBox>
+    </center>
+    
+    <bottom>
+        <HBox spacing="10" alignment="CENTER" style="-fx-padding: 15; -fx-background-color: #ecf0f1;">
+            <Button text="Fin" onAction="#quitter" 
+                    style="-fx-background-color: #e74c3c; -fx-text-fill: white; -fx-font-size: 14px; -fx-padding: 10 30;"/>
+        </HBox>
+    </bottom>
+    
+</BorderPane>

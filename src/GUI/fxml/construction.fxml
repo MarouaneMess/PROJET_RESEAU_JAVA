@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.ComboBox?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.ListView?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.Priority?>
+
+<BorderPane xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="GUI.controllers.ConstructionController"
+            prefWidth="900" prefHeight="750">
+    
+    <top>
+        <VBox spacing="10" style="-fx-background-color: #2c3e50; -fx-padding: 20;">
+            <Label text="CONSTRUCTION DU RÉSEAU ÉLECTRIQUE" 
+                   style="-fx-font-size: 24px; -fx-text-fill: white; -fx-font-weight: bold;"/>
+            <Label text="Ajouter générateurs, maisons et créer connexions" 
+                   style="-fx-font-size: 14px; -fx-text-fill: #ecf0f1;"/>
+        </VBox>
+    </top>
+    
+    <center>
+        <HBox spacing="15" style="-fx-padding: 20;" HBox.hgrow="ALWAYS">
+            
+            <!-- Panneau Générateurs -->
+            <VBox spacing="10" minWidth="350" style="-fx-border-color: #3498db; -fx-border-width: 2; -fx-padding: 15; -fx-background-color: #ecf0f1;" HBox.hgrow="ALWAYS">
+                <Label text="Générateurs" style="-fx-font-weight: bold; -fx-font-size: 14; -fx-text-fill: #2c3e50;" />
+                <VBox spacing="8">
+                    <HBox spacing="8">
+                        <Label text="Nom :" minWidth="80" style="-fx-text-fill: #2c3e50;" />
+                        <TextField fx:id="nomGenerateur" promptText="ex: G1" prefHeight="35" HBox.hgrow="ALWAYS" />
+                    </HBox>
+                    <HBox spacing="8">
+                        <Label text="Capacité (kW) :" minWidth="80" style="-fx-text-fill: #2c3e50;" />
+                        <TextField fx:id="capaciteGenerateur" promptText="ex: 50" prefHeight="35" HBox.hgrow="ALWAYS" />
+                    </HBox>
+                    <Button text="Ajouter Générateur" onAction="#ajouterGenerateur" 
+                            style="-fx-padding: 10; -fx-background-color: #3498db; -fx-text-fill: white; -fx-font-size: 13;" />
+                </VBox>
+                <ListView fx:id="listeGenerateurs" prefHeight="400" VBox.vgrow="ALWAYS" />
+            </VBox>
+            
+            <!-- Panneau Maisons -->
+            <VBox spacing="10" minWidth="350" style="-fx-border-color: #e67e22; -fx-border-width: 2; -fx-padding: 15; -fx-background-color: #ecf0f1;" HBox.hgrow="ALWAYS">
+                <Label text="Maisons" style="-fx-font-weight: bold; -fx-font-size: 14; -fx-text-fill: #2c3e50;" />
+                <VBox spacing="8">
+                    <HBox spacing="8">
+                        <Label text="Nom :" minWidth="80" style="-fx-text-fill: #2c3e50;" />
+                        <TextField fx:id="nomMaison" promptText="ex: M1" prefHeight="35" HBox.hgrow="ALWAYS" />
+                    </HBox>
+                    <HBox spacing="8">
+                        <Label text="Consommation :" minWidth="80" style="-fx-text-fill: #2c3e50;" />
+                        <ComboBox fx:id="typeMaison" prefWidth="150" prefHeight="35" HBox.hgrow="ALWAYS" />
+                    </HBox>
+                    <Button text="Ajouter Maison" onAction="#ajouterMaison" 
+                            style="-fx-padding: 10; -fx-background-color: #e67e22; -fx-text-fill: white; -fx-font-size: 13;" />
+                </VBox>
+                <ListView fx:id="listeMaisons" prefHeight="400" VBox.vgrow="ALWAYS" />
+            </VBox>
+            
+        </HBox>
+    </center>
+    
+    <bottom>
+        <VBox spacing="12" style="-fx-padding: 15; -fx-background-color: #ecf0f1; -fx-border-color: #cccccc; -fx-border-width: 1 0 0 0;">
+            
+            <!-- Panneau Connexions -->
+            <Label text="Connexions (Maison → Générateur)" style="-fx-font-weight: bold; -fx-font-size: 13; -fx-text-fill: #2c3e50;" />
+            <HBox spacing="10" alignment="CENTER_LEFT">
+                <ComboBox fx:id="maison1" promptText="Sélectionner Maison" prefWidth="200" prefHeight="35" HBox.hgrow="ALWAYS" />
+                <Label text="→" style="-fx-font-size: 16;" />
+                <ComboBox fx:id="generateur1" promptText="Sélectionner Générateur" prefWidth="200" prefHeight="35" HBox.hgrow="ALWAYS" />
+                <Button text="Connecter" onAction="#connecterMaison" 
+                        style="-fx-padding: 10; -fx-background-color: #27ae60; -fx-text-fill: white; -fx-font-size: 13;" />
+            </HBox>
+            
+            <Label text="Supprimer Connexion" style="-fx-font-weight: bold; -fx-font-size: 13; -fx-text-fill: #2c3e50;" />
+            <HBox spacing="10" alignment="CENTER_LEFT">
+                <ComboBox fx:id="maisonSuppr" promptText="Sélectionner Maison" prefWidth="200" prefHeight="35" HBox.hgrow="ALWAYS" />
+                <Label text="→" style="-fx-font-size: 16;" />
+                <ComboBox fx:id="generateurSuppr" promptText="Sélectionner Générateur" prefWidth="200" prefHeight="35" HBox.hgrow="ALWAYS" />
+                <Button text="Supprimer" onAction="#supprimerConnexion" 
+                        style="-fx-padding: 10; -fx-background-color: #e74c3c; -fx-text-fill: white; -fx-font-size: 13;" />
+            </HBox>
+            
+            <ListView fx:id="listeConnexions" prefHeight="120" VBox.vgrow="ALWAYS" />
+            
+            <HBox spacing="10" alignment="CENTER_RIGHT">
+                <Button text="Visualiser le Réseau" onAction="#visualiserReseau" 
+                        style="-fx-padding: 12 20; -fx-font-size: 13; -fx-background-color: #9b59b6; -fx-text-fill: white;" />
+                <Button text="Passer à l'opération" onAction="#ouvrirOperation" 
+                        style="-fx-padding: 12 20; -fx-font-size: 13; -fx-background-color: #2980b9; -fx-text-fill: white;" />
+            </HBox>
+            
+        </VBox>
+    </bottom>
+    
+</BorderPane>
